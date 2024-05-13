@@ -10,7 +10,7 @@ def main():
 
     path = './data/data_tanah_bali_clean.csv'
     db_name = 'data_tanah_bali'
-    collection_name = 'list_tanah_bali'
+    collection_name = 'list_tanah_bali_clean'
     
     data = pd.read_csv(path)
     
