@@ -4,9 +4,10 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 from time import sleep
 from seleniumbase import Driver
+from load_data_to_mongo import load_to_mongo
 import csv
 import os
-import re
+import datetime
 
 
 def load_page(self, element):
@@ -31,39 +32,24 @@ def get_text_with_class(self, element, default=""):
         return default
 
 
-def save_to_csv(data):
-    csv_file_path = "data_tanah_bali2_new.csv"
-
-    if os.path.exists(csv_file_path):
-        with open(csv_file_path, mode='a', newline='', encoding='utf-8') as file:
-            writer = csv.writer(file)
-            for row in data:
-                writer.writerow(row)
-        print("Additional data has been added to", csv_file_path)
-        
-    else:
-        with open(csv_file_path, mode='w', newline='', encoding='utf-8') as file:
-            writer = csv.writer(file)
-            header = ["Title", "Date", "Price", "Address", "Land Area"]
-            writer.writerow(header)
-            for row in data:
-                writer.writerow(row)
-
-
 def main():
-    data = []
+    data = dict()
     driver = Driver(uc=True)
     
+    col_name = 'raw'
+    
     try:
-        for i in range(1, 1310):
+        for i in range(1, 3):
             driver.get(f"https://www.rumah123.com/jual/bali/tanah/?sort=posted-desc&page={i}")
             
             element = driver.find_element(By.CSS_SELECTOR, '.ui-search-page__content.relative.ui-col-12')
             
             cards = element.find_elements(By.CSS_SELECTOR, '.ui-organism-intersection__element.intersection-card-container')
             
-            for card in cards:
+            for _id, card in enumerate(cards):
                 try: 
+                    _id = f'{i}_{_id}'
+                    
                     card_feature = card.find_element(By.CSS_SELECTOR, '.card-featured__content-wrapper')
                     price = card_feature.find_element(By.CSS_SELECTOR, '.card-featured__middle-section__price')
                     price = price.text
@@ -87,19 +73,29 @@ def main():
                     
                     print(f'Title: {title}, Date: {date}, Price: {price}, Address: {address}, Land area: {cleaned_land_area}')
                     
-                    data.append([title, date, price, address, cleaned_land_area])
+                    
+                    data[_id] = {
+                        'title' : title,
+                        'date' : date,
+                        'price' : price,
+                        'address' : address,
+                        'land_area' : cleaned_land_area,
+                        'timestamp' : datetime.datetime.now().replace(microsecond=0)
+                    }
                 
                 except:
                     pass
 
             print(f"-----------------Halaman ke-{i}-----------------")
-        save_to_csv(data)
+        load_to_mongo(data, col_name)
+        
     
-    except:
-        print('Error:(')
-        save_to_csv(data)
+    except Exception as e:
+        print('Error :(')
+        print(f'{e}')
+        load_to_mongo(data, col_name)
     
-    print('Scrape selesai!!!') 
+    print(f'Scrape data telah berhasil dan selesai :D') 
     
     sleep(10)
     
