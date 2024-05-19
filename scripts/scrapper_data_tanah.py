@@ -39,7 +39,7 @@ def main():
     col_name = 'raw'
     
     try:
-        for i in range(1, 3):
+        for i in range(1, 1344+1):
             driver.get(f"https://www.rumah123.com/jual/bali/tanah/?sort=posted-desc&page={i}")
             
             element = driver.find_element(By.CSS_SELECTOR, '.ui-search-page__content.relative.ui-col-12')
@@ -71,7 +71,7 @@ def main():
                     date = div.find_element(By.TAG_NAME, 'p')
                     date = date.text
                     
-                    print(f'Title: {title}, Date: {date}, Price: {price}, Address: {address}, Land area: {cleaned_land_area}')
+                    print(f'_id = {_id}, Title: {title}, Date: {date}, Price: {price}, Address: {address}, Land area: {cleaned_land_area}')
                     
                     
                     data[_id] = {
